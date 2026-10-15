@@ -45,7 +45,7 @@ const electronNative: TestProjectConfiguration = {
 
 export default defineConfig({
   test: {
-    globalSetup: ['./vitest.run-tmp.ts'],
+    globalSetup: ['./vitest.run-tmp.ts', './vitest.hermes-python.ts'],
     projects: [reactUi, electronNative]
   }
 })
