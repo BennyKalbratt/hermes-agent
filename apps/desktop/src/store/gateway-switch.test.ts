@@ -23,6 +23,7 @@ import {
   setSessionsLoading
 } from '@/store/session'
 import { $stalledSessionIds } from '@/store/session-states'
+import { $starmapGraph } from '@/store/starmap'
 import { $retainedTodosBySession, restoreSessionTodosFromSnapshot } from '@/store/todos'
 import {
   $transcriptTailBySessionId,
@@ -30,6 +31,7 @@ import {
   recordTranscriptTail,
   transcriptTailState
 } from '@/store/transcript-tail'
+import type { StarmapGraph } from '@/types/hermes'
 
 import {
   $gatewaySwitching,
@@ -148,6 +150,14 @@ describe('wipeSessionListsForGatewaySwitch', () => {
     wipeSessionListsForGatewaySwitch()
 
     expect(invalidateProfileListFetches).toHaveBeenCalled()
+  })
+
+  it("drops the outgoing backend's star map so the next open (or an open view) scans the new one", () => {
+    $starmapGraph.set({ edges: [], nodes: [{ id: 'old-backend-skill' }] } as unknown as StarmapGraph)
+
+    wipeSessionListsForGatewaySwitch()
+
+    expect($starmapGraph.get()).toBeNull()
   })
 })
 

@@ -33,6 +33,7 @@ import {
 import { clearAllSessionControl } from '@/store/session-control'
 import { resetSessionPinMirror } from '@/store/session-pin-sync'
 import { clearAllSessionStates } from '@/store/session-states'
+import { resetStarmapGraph } from '@/store/starmap'
 import { clearAllSessionTodos } from '@/store/todos'
 import { clearTranscriptTailPaging } from '@/store/transcript-tail'
 import { clearTranscriptTails } from '@/store/transcript-tail-cache'
@@ -213,6 +214,8 @@ export function wipeSessionListsForGatewaySwitch(): void {
   setSessionProfilesUsage({})
   setCronSessions([])
   invalidateCronJobsRequests()
+  // The star map is a scan of the outgoing backend's skills and memory; an open view reloads it.
+  resetStarmapGraph()
   setCronJobs([])
   setMessagingSessions([])
   setMessagingListServer(null)

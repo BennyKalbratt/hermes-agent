@@ -13,7 +13,7 @@ vi.mock('@/hermes', () => ({
     })
 }))
 
-const { $starmapError, $starmapGraph, $starmapLoading, loadStarmapGraph, resetStarmapGraph } =
+const { $starmapError, $starmapGraph, $starmapLoading, loadStarmapGraph, resetStarmapGraph, watchStarmapGraph } =
   await import('./starmap')
 
 const graph = (id: string): StarmapGraph => ({ edges: [], nodes: [{ id }] }) as unknown as StarmapGraph
@@ -75,5 +75,50 @@ describe('loadStarmapGraph', () => {
 
     expect(fetches).toHaveLength(1)
     expect($starmapGraph.get()?.nodes.map(node => node.id)).toEqual(['cached-node'])
+  })
+
+  // Nothing else reloads after a profile or gateway switch: the view loads on mount only.
+  it('reloads an open star map after a reset strands its first load', async () => {
+    const unwatch = watchStarmapGraph()
+
+    try {
+      expect(fetches).toHaveLength(1)
+      resetStarmapGraph()
+      expect(fetches).toHaveLength(2)
+
+      fetches[1].resolve(graph('current-node'))
+      fetches[0].resolve(graph('previous-node'))
+      await vi.waitFor(() => expect($starmapGraph.get()?.nodes.map(node => node.id)).toEqual(['current-node']))
+      expect($starmapLoading.get()).toBe(false)
+    } finally {
+      unwatch()
+    }
+  })
+
+  it('reloads an open star map that already showed the previous scope', async () => {
+    const unwatch = watchStarmapGraph()
+
+    try {
+      fetches[0].resolve(graph('previous-node'))
+      await vi.waitFor(() => expect($starmapGraph.get()).not.toBeNull())
+      resetStarmapGraph()
+
+      expect($starmapGraph.get()).toBeNull()
+      expect(fetches).toHaveLength(2)
+      fetches[1].resolve(graph('current-node'))
+      await vi.waitFor(() => expect($starmapGraph.get()?.nodes.map(node => node.id)).toEqual(['current-node']))
+    } finally {
+      unwatch()
+    }
+  })
+
+  it('does not fetch on a reset while the star map is closed', () => {
+    const unwatch = watchStarmapGraph()
+    unwatch()
+    fetches.shift()?.resolve(graph('closed'))
+
+    resetStarmapGraph()
+
+    expect(fetches).toHaveLength(0)
   })
 })

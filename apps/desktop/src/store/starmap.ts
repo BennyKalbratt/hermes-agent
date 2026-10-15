@@ -81,4 +81,22 @@ export function resetStarmapGraph(): void {
   $starmapError.set(null)
   // The stranded load no longer owns the spinner; a fresh load re-raises it.
   $starmapLoading.set(false)
+
+  // An open view loads on mount only, so nothing else would refetch for the new scope.
+  if (openStarmapViews > 0) {
+    void loadStarmapGraph()
+  }
+}
+
+let openStarmapViews = 0
+
+/** Load the graph for a mounted Star Map view and keep it loaded across profile/gateway resets
+ *  while the view stays open. Returns the unmount cleanup. */
+export function watchStarmapGraph(): () => void {
+  openStarmapViews += 1
+  void loadStarmapGraph()
+
+  return () => {
+    openStarmapViews -= 1
+  }
 }
